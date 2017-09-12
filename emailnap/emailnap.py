@@ -247,7 +247,7 @@ class Emailnap(object):
     msgRoot = MIMEMultipart('alternative')
     msgRoot['From'] = "North American Pairs District 23 <nap@bridgemojo.com>"
     msgRoot['To'] = to_address
-    msgRoot['Subject'] = "Invitation to District 23 semi-finals"
+    msgRoot['Subject'] = "Invitation to District 23 NAP Unit Final"
 
     msgHtml = MIMEMultipart('related')
 
