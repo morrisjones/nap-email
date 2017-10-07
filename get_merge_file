@@ -1,0 +1,7 @@
+#!/bin/bash
+
+./emnap \
+  --gamefiles /Users/mjones/gamefiles/2017 \
+  --playerinfo /Users/mjones/D23-EMAIL.CSV \
+  --json \
+  >merge.json

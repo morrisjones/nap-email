@@ -12,12 +12,12 @@ mojo@whiteoaks.com
 
 Environment configuration:
 
-**MAIL_HOST**  
+**SMTP_HOST**  
 Email SMTP server
 
-**MAIL_USER**  
+**SMTP_USER**  
 User name for SMTP login
 
-**MAIL_PASSWORD**  
+**SMTP_PASSWORD**  
 Password for SMTP login
 
