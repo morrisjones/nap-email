@@ -1,0 +1,8 @@
+#!/bin/bash
+
+PASSWORD=`cat ${HOME}/nap-email-password`
+./emnap \
+  --smtphost mail.rs.whiteoaks.com \
+  --user nap \
+  --password "${PASSWORD}" \
+  --mergefile merge.json
