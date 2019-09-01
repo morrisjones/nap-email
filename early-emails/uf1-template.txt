@@ -1,0 +1,25 @@
+One last appeal for seats
+=========================
+
+I currently have a waiting list of pairs who would like to play this Sunday at the South Bay Bridge Club.
+
+If any of you would be willing to change your entry to the Long Beach game on November 5, you would make some bridge players very happy. Perhaps you would enjoy playing without the sounds of the church next door during the game? That's a big advantage for Long Beach.
+
+But if not, I certainly look forward to seeing you in Lomita on Sunday morning. We currently have 21.5 tables of players in a 20-table club. That's made possible by having one half-table in each section.
+
+You can see the current provisional table assignments here: https://nap.bridgemojo.com/registration/show
+
+Here is your current entry information:
+
+    {pa}
+    {pb}
+    Flight: {flight}
+    Starting table: {table} {direction}
+    Requires stationary: {stationary}
+
+NAP details for District 23 are at https://nap.bridgemojo.com
+
+Sincerely,
+Morris "Mojo" Jones
+mojo@bridgemojo.com
+District 23 North American Pairs Coordinator 

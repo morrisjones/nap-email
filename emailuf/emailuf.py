@@ -1,4 +1,5 @@
 
+
 import os
 import argparse
 from smtplib import SMTP
@@ -9,17 +10,18 @@ from __init__ import __version__
 from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
 from email.mime.text import MIMEText
-from nap.nap import Nap
+from nap.prereg import Seat
 from nap.gamefile.player import canonical_pnum
 
 
-class Emailnap(object):
+class EmailUF(object):
 
   def __init__(self):
     self.smtphost = os.environ.get('SMTP_HOST')
     self.smtpuser = os.environ.get('SMTP_USER')
     self.smtppass = os.environ.get('SMTP_PASSWORD')
-    self.gamefile_tree = os.environ.get('GAMEFILE_TREE')
+    self.prereg_dir = os.environ.get('PREREG_DIR')
+    self.unitfinal = None
     self.player_info = os.environ.get('PLAYER_INFO')
     self.mergefile = None
     self.test = False
@@ -52,10 +54,10 @@ class Emailnap(object):
                         help="TEST mode, all email goes to $SMTP_TEST")
     parser.add_argument('--testconn', action="store_true", help="Test SMTP connection")
     parser.add_argument('-j','--json', action="store_true", help="Generate JSON merge data")
-    parser.add_argument('-c', '--csv', action="store_true", help="Generate CSV email data")
     parser.add_argument('-m','--mergefile', help="Specify merge file name")
     parser.add_argument('-i','--playerinfo', help="File name for email CSV data, overrides $PLAYER_INFO")
-    parser.add_argument('-g','--gamefiles', help="Top of the tree of game files")
+    parser.add_argument('-P','--prereg', help="Directory where UF files are found")
+    parser.add_argument('--unitfinal', help="Values 1 or 2 for Unit Final game")
     args = parser.parse_args(arglist)
 
     errors = []
@@ -67,25 +69,23 @@ class Emailnap(object):
     # These arguments required to create the JSON merge file
     #
 
-    if args.json or args.csv:
-
-      if args.gamefiles:
-        self.gamefile_tree = args.gamefiles
-      if not self.gamefile_tree:
-        errors.append("No gamefile tree specified")
-      if not errors:
-        if self.verbose:
-          print "Loading game files from %s" % self.gamefile_tree
-        self.nap = Nap()
-        self.nap.load_games(self.gamefile_tree)
-        self.nap.load_players()
-
+    if args.json:
+      if args.prereg:
+        self.prereg_dir = args.prereg
+      if not self.prereg_dir:
+        errors.append("No prereg directory specified")
+      if args.unitfinal:
+        self.unitfinal = args.unitfinal
+        if self.unitfinal not in ['1', '2']:
+          errors.append("unitfinal value must be '1' or '2'")
+      if not self.unitfinal:
+        errors.append("Must specify which unit final game")
       if args.playerinfo:
         self.player_info = args.playerinfo
       if not self.player_info:
         errors.append("No player info file specified")
       if not errors and self.verbose:
-        print "Player info file: %s" % self.player_info
+        print "# Player info file: %s" % self.player_info
 
     #
     # These arguments required to generate emails from mergefile and template
@@ -125,53 +125,16 @@ class Emailnap(object):
     if not errors and args.json:
 
       if self.verbose:
-        print "# JSON output merge data follows"
+        print "# Loading email info"
       self.load_d23_emails(self.player_info)
-      merge = []
-      for idx, player in enumerate(self.nap.players):
-        canon_pnum = player.canon_pnum
-        if canon_pnum in self.email_reference:
-          pinfo = self.email_reference[canon_pnum]
-          flights_qualified = []
-          if player.a_flight:
-            flights_qualified.append('A (Open)')
-          if player.b_flight:
-            flights_qualified.append('B (0-2500)')
-          if player.c_flight:
-            flights_qualified.append('C (NLM 0-500)')
-          dates = []
-          for qd in self.nap.qualdates[player]:
-            dates.append("%s" % qd)
-          fields = {
-            'pnum': pinfo['pnum'],
-            'fname': pinfo['fname'],
-            'lname': pinfo['lname'],
-            'email': pinfo['email'],
-            'flights': flights_qualified,
-            'quals': dates,
-          }
-          merge.append(fields)
-
+      if self.verbose:
+        print "# JSON output merge data follows"
+      merge = self.load_prereg()
       doc = {
         '_number_of_records': len(merge),
         'merge': merge,
       }
       print json.dumps(doc, sort_keys=True, indent=4, separators=(',',': '))
-
-    #
-    # Generate a CSV file of email names and addresses
-    #
-
-    if not errors and args.csv:
-
-      if self.verbose:
-        print "# CSV email data follows"
-      self.load_d23_emails(self.player_info)
-      for idx, player in enumerate(self.nap.players):
-        canon_pnum = player.canon_pnum
-        if canon_pnum in self.email_reference:
-          pinfo = self.email_reference[canon_pnum]
-          print "%s %s <%s>" % (pinfo['fname'], pinfo['lname'], pinfo['email'])
 
     #
     # Generate emails from mergefile plus two templates, text and html
@@ -188,16 +151,28 @@ class Emailnap(object):
           print "Test mode, all email to %s" % self.test_email_to
 
       for merge in mergelist:
-        flights_qualified = "  ".join(merge['flights'])
-        qualifying_games_html = "<br/>".join(merge['quals'])
-        qualifying_games_text = "\n    ".join(merge['quals'])
-        merge['flights_qualified'] = flights_qualified
-        merge['qualifying_games_html'] = qualifying_games_html
-        merge['qualifying_games_text'] = qualifying_games_text
+        partnership = merge['partnership']
+        pa = partnership['player_a']
+        pb = partnership['player_b']
+        flight = partnership['flight']
+        table = partnership['table']
+        direction = partnership['direction']
+        pa_name = "%s %s" % (pa['fname'],pa['lname'])
+        pb_name = "%s %s" % (pb['fname'],pb['lname'])
+        stationary = "Yes" if partnership['req_ns'] else "No"
+
+        fields = {
+          'pa': pa_name,
+          'pb': pb_name,
+          'flight': flight,
+          'table': table,
+          'direction': direction,
+          'stationary': stationary,
+        }
 
         # The mime object gets the To: address that appears in the message
         print "Message To: %s" % merge['email']
-        msg = self.make_mime(merge['email'],merge)
+        msg = self.make_mime(merge['email'],fields)
 
         # The sendmail object gets the To: address of the envelope, where the mail is
         # actually delivered
@@ -219,6 +194,46 @@ class Emailnap(object):
       return 1
 
     return 0
+
+  def load_prereg(self):
+    d = self.prereg_dir
+    g = self.unitfinal
+    merge = []
+    for flight in ['a','b','c']:
+      uff = "%s/UF%s-%s.json" % (d,g,flight)
+      if self.verbose:
+        print "# Loading %s" % uff
+      with open(uff,'r') as f:
+        ufsection = json.load(f)
+      section = ufsection['section']
+      for table in section.keys():
+        for direction in (Seat.NS,Seat.EW):
+          if section[table][direction]['seat']:
+            a = section[table][direction]['seat']['player_a']
+            b = section[table][direction]['seat']['player_b']
+            partnership = {
+              'player_a': {
+                'pnum': a['pnum'],
+                'fname': a['fname'],
+                'lname': a['lname'],
+              },
+              'player_b': {
+                'pnum': b['pnum'],
+                'fname': b['fname'],
+                'lname': b['lname'],
+              },
+              'flight': flight.upper(),
+              'table': table,
+              'direction': direction,
+              'req_ns': section[table][direction]['seat']['req_ns']
+            }
+            for player in (a,b):
+              cpnum = canonical_pnum(player['pnum'])
+              if cpnum in self.email_reference:
+                email = self.email_reference[cpnum]
+                email['partnership'] = partnership
+                merge.append(email)
+    return merge
 
   def sendmail(self,mailfrom,mailto,message):
     smtp = SMTP(self.smtphost)
@@ -245,16 +260,10 @@ class Emailnap(object):
     with open(player_info_file,'r') as f:
       csvfile = csv.reader(f)
       for row in csvfile:
-        pnum, rank, title, fname, midi, lname, \
-        adr1, adr2, city, state, zip, country, \
-        total_points, ytd_points, home_phone, work_phone, \
-        paid_thru, unit, last_active, gender, district, \
-        email, payment, elig_points \
-          = row
+        pnum, fname, lname, email = row
         if valid_pnum.match(pnum) \
             and not email.startswith('Confidential') \
-            and not email.startswith('BadAddress') \
-            and len(email) > 5:
+            and len(email) > 0:
           canon_pnum = canonical_pnum(pnum)
           self.email_reference[canon_pnum] = {
             'pnum': pnum,
@@ -269,11 +278,11 @@ class Emailnap(object):
     msgRoot = MIMEMultipart('alternative')
     msgRoot['From'] = "North American Pairs District 23 <nap@bridgemojo.com>"
     msgRoot['To'] = to_address
-    msgRoot['Subject'] = "Invitation to District 23 NAP Final"
+    msgRoot['Subject'] = "Unit Final Information"
 
     msgHtml = MIMEMultipart('related')
 
-    with open('nap-template.html','r') as f:
+    with open('uf2-template.html','r') as f:
       htmltemplate = f.read()
 
     html = htmltemplate.format(**fields)
@@ -281,15 +290,7 @@ class Emailnap(object):
     htmlpart = MIMEText(html,'html')
     msgHtml.attach(htmlpart)
 
-    with open('images/nap-w500-h269.png') as f:
-      logo = f.read()
-
-    logopart = MIMEImage(logo)
-    logopart.add_header('Content-ID','<nap_logo@bridgemojo.com>')
-    logopart.add_header('Content-Disposition','inline;\n filename="nap-w500-h269.png"')
-    msgHtml.attach(logopart)
-
-    with open('nap-template.txt','r') as f:
+    with open('uf2-template.txt','r') as f:
       texttemplate = f.read()
     text = texttemplate.format(**fields)
 

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+source .env/bin/activate
+./emuf \
+  --prereg /Users/mjones/prereg \
+  --unitfinal 2 \
+  --playerinfo /Users/mjones/D23-EMAIL.CSV \
+  --verbose \
+  --json \
+  >merge.json

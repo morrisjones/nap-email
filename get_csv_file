@@ -1,0 +1,7 @@
+#!/bin/bash
+
+./emnap \
+  --gamefiles /Users/mjones/gamefiles/2018 \
+  --playerinfo /Users/mjones/D23-roster-2018-09.csv \
+  --csv \
+  >email.txt

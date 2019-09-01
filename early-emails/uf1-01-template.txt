@@ -1,0 +1,36 @@
+Your North American Pairs Game is Happening Soon!
+=================================================
+
+You have a reservation to play in a Unit Final game, Sunday, October 15, at the South Bay Bridge Club, 24100 Narbonne Ave., Lomita, CA.
+
+This is a two-session Unit Final game for the North American Pairs. The first session begins at 10:00 a.m. We will take a one-hour lunch break, and should be finished around 6:00 p.m.
+
+Important This event is at capacity!
+------------------------------------
+
+I have a waiting list of players who would like to play in this game. If you can't play Sunday as planned, or would be willing to switch to the November 5 game in Long Beach, please let me know as soon as you can!
+
+Here is the entry information I have for you, along with a provisional table assignment:
+
+    {pa}
+    {pb}
+    Flight: {flight}
+    Starting table: {table} {direction}
+    Request stationary: {stationary}
+
+This table assignment may be different from your original confirmation email, as I shuffle to manage game and player requirements, and may change at game time. At this time, all pairs requesting a stationary N/S should be accommodated.
+
+NAP details for District 23 are at https://nap.bridgemojo.com
+
+See a list of current players registered to play at https://nap.bridgemojo.com/registration/show
+
+Please bring $48 per partnership in cash or check payable to ALACBU.
+
+This event is sponsored by ACBL District 23, the Association of Los Angeles County Bridge Units.
+
+You are receiving this message because your email address is on file with the ACBL. Members who have opted out of email related to ACBL events will not recieve this email. You may change your preferences by logging in and selecting Privacy Settings at ACBL.org. 
+
+Sincerely,
+Morris "Mojo" Jones
+mojo@bridgemojo.com
+District 23 North American Pairs Coordinator

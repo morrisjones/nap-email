@@ -1,8 +1,10 @@
 #!/bin/bash
 
+source .env/bin/activate
 PASSWORD=`cat ${HOME}/nap-email-password`
-./emnap \
+./emuf \
+  --test mojo@whiteoaks.com \
   --smtphost mail.rs.whiteoaks.com \
   --user nap \
   --password "${PASSWORD}" \
-  --mergefile merge7.json
+  --mergefile merge.json
