@@ -1,10 +1,11 @@
 
 import os
 import argparse
-from smtplib import SMTP
+from smtplib import SMTP, SMTPException
 import csv
 import re
 import json
+import socket
 from __init__ import __version__
 from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
@@ -27,6 +28,7 @@ class Emailnap(object):
     self.verbose = False
     self.email_reference = {}
     self.nap = None
+    self.smtp = None
     return
 
   def main(self,arglist):
@@ -187,6 +189,9 @@ class Emailnap(object):
         if args.verbose:
           print "Test mode, all email to %s" % self.test_email_to
 
+      self.smtp = SMTP(self.smtphost)
+      # self.smtp.set_debuglevel(True)
+      self.smtp.login(self.smtpuser,self.smtppass)
       for merge in mergelist:
         flights_qualified = "  ".join(merge['flights'])
         qualifying_games_html = "<br/>".join(merge['quals'])
@@ -208,6 +213,8 @@ class Emailnap(object):
         print "actually mailing to: %s" % (mailto)
         self.sendmail("nap@bridgemojo.com",mailto,msg)
 
+      self.smtp.quit()
+
 
     if args.testconn:
       self.testconn()
@@ -221,17 +228,22 @@ class Emailnap(object):
     return 0
 
   def sendmail(self,mailfrom,mailto,message):
-    smtp = SMTP(self.smtphost)
-    # smtp.set_debuglevel(True)
-    smtp.starttls()
-    smtp.login(self.smtpuser,self.smtppass)
-    smtp.sendmail(mailfrom,mailto,message)
-    smtp.quit()
-
-    return
+    try:
+      # self.smtp = SMTP(self.smtphost)
+      # smtp.set_debuglevel(True)
+      # smtp.starttls()
+      # smtp.login(self.smtpuser,self.smtppass)
+      self.smtp.sendmail(mailfrom,mailto,message)
+      # smtp.quit()
+      return
+    except socket.error as e:
+        print e
+        print "Caught exception, trying again"
+        raise e
 
   def testconn(self):
     """Test SMTP server connection"""
+    print "testing connection to %s" % self.smtphost
     smtp = SMTP(self.smtphost)
     smtp.set_debuglevel(True)
     smtp.starttls()

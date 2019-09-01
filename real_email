@@ -5,4 +5,4 @@ PASSWORD=`cat ${HOME}/nap-email-password`
   --smtphost mail.rs.whiteoaks.com \
   --user nap \
   --password "${PASSWORD}" \
-  --mergefile merge7.json
+  --mergefile merge5.json
